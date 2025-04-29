@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: apicurio-postgres
+    environment:
+      POSTGRES_USER: apicurio
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: registrydb
+    ports:
+      - "5432:5432" # Optional: Expose port for external access/debugging
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  apicurio-registry:
+    image: apicurio/apicurio-registry:latest-snapshot
+    container_name: apicurio-studio-registry
+    environment:
+      APICURIO_STORAGE_KIND: sql
+      APICURIO_STORAGE_SQL_KIND: postgresql
+      APICURIO_DATASOURCE_URL: jdbc:postgresql://postgres:5432/registrydb
+      APICURIO_DATASOURCE_USERNAME: apicurio
+      APICURIO_DATASOURCE_PASSWORD: password
+      apicurio.rest.deletion.group.enabled: "true"
+      apicurio.rest.deletion.artifact.enabled: "true"
+      apicurio.rest.deletion.artifact-version.enabled: "true"
+      apicurio.rest.mutability.artifact-version-content.enabled: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  apicurio-studio:
+    image: apicurio/apicurio-studio-ui:latest-snapshot
+    container_name: apicurio-studio-studio
+    environment:
+      - APICURIO_CONTEXT_PATH=/studio/
+    depends_on:
+      - apicurio-registry
+
+  nginx:
+    image: nginx
+    container_name: apicurio-studio-proxy
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - apicurio-registry
+      - apicurio-studio
+
+volumes:
+  postgres_data:

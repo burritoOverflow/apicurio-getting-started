@@ -1,0 +1,11 @@
+{
+    "namespace":"com.example.items",
+    "name":"ItemId",
+    "type":"record",
+    "fields":[
+        {
+            "name":"id",
+            "type":"int"
+        }
+    ]
+}
